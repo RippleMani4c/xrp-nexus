@@ -6,7 +6,6 @@
 <title>XRP Nexus | Real-Time</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
-<script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
   :root { --neon-cyan: #00f0ff; --neon-purple: #b026ff; --bg-dark: #0a0a12; }
@@ -35,7 +34,7 @@
       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center orbitron font-black text-black text-lg">X</div>
       <div>
         <h1 class="orbitron text-xl font-bold neon-text tracking-wider">XRP NEXUS</h1>
-        <p class="text-xs text-cyan-400/70">@RippleMani4c • CoinGecko + XRPL + Binance</p>
+        <p class="text-xs text-cyan-400/70">@RippleMani4c • CoinGecko + XRPL</p>
       </div>
     </div>
     <div class="flex items-center gap-2 text-xs">
@@ -66,7 +65,7 @@
     </div>
   </section>
 
-  <!-- Expanded Real-time Stats (more info on desktop) -->
+  <!-- Extra Real-time Data -->
   <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
     <div class="glass rounded-xl p-3 text-center">
       <p class="text-cyan-400/60 uppercase text-[10px] mb-1">24h High</p>
@@ -103,25 +102,47 @@
     </div>
   </section>
 
-  <!-- ========== PROFESSIONAL FUTURISTIC CHART ========== -->
+  <!-- ========== TRADINGVIEW CHART (FIXED & VISIBLE) ========== -->
   <section class="glass rounded-2xl overflow-hidden glow-border">
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-cyan-500/20 bg-black/40">
       <div class="flex items-center gap-2 sm:gap-3">
         <span class="orbitron text-xs sm:text-sm text-cyan-400 tracking-wider font-bold">LIVE CHART</span>
-        <span class="text-[10px] sm:text-xs text-white/40">XRP/USDT • Binance 5m</span>
+        <span class="text-[10px] sm:text-xs text-white/40">BINANCE:XRPUSDT • 15m</span>
       </div>
-      <div class="flex items-center gap-2">
-        <span id="chart-price" class="orbitron text-xs sm:text-sm font-bold text-cyan-300">--</span>
-        <div class="flex items-center gap-1 text-[10px] text-green-400">
-          <span class="w-1.5 h-1.5 rounded-full bg-green-400 pulse"></span>
-          <span class="hidden sm:inline">LIVE</span>
-        </div>
+      <div class="flex items-center gap-1.5 text-[10px] text-green-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-400 pulse"></span>
+        <span>LIVE</span>
       </div>
     </div>
 
-    <!-- Balanced professional heights (not too big) -->
-    <div id="xrp-chart" class="h-[340px] md:h-[420px] lg:h-[520px] w-full"></div>
+    <!-- Responsive heights that work on phone + desktop -->
+    <div class="h-[340px] md:h-[420px] lg:h-[520px] w-full">
+      <div id="tradingview_xrp" style="height:100%; width:100%;"></div>
+    </div>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+      new TradingView.widget({
+        autosize: true,
+        symbol: "BINANCE:XRPUSDT",
+        interval: "15",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "1",
+        locale: "en",
+        toolbar_bg: "#0a0a12",
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        save_image: false,
+        container_id: "tradingview_xrp",
+        backgroundColor: "#0a0a12",
+        gridColor: "rgba(0,240,255,0.05)",
+        studies: []
+      });
+    </script>
   </section>
+  <!-- ========== END TRADINGVIEW ========== -->
 
   <!-- Globe + XRPL -->
   <section class="glass rounded-2xl p-4 glow-border relative">
@@ -175,7 +196,6 @@
 </footer>
 
 <script>
-// ===== CoinGecko (expanded real-time data) =====
 async function updateAll() {
   try {
     const r = await fetch("https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false");
@@ -195,26 +215,21 @@ async function updateAll() {
     document.getElementById("high24").textContent = "$" + md.high_24h.usd.toFixed(4);
     document.getElementById("low24").textContent = "$" + md.low_24h.usd.toFixed(4);
 
-    // Extra desktop data
+    // Extra data
     const ch1h = md.price_change_percentage_1h_in_currency?.usd || 0;
     const ch7d = md.price_change_percentage_7d_in_currency?.usd || 0;
-    const el1h = document.getElementById("change1h");
-    el1h.textContent = (ch1h >= 0 ? "+" : "") + ch1h.toFixed(2) + "%";
-    el1h.className = "orbitron text-base sm:text-lg font-bold " + (ch1h >= 0 ? "price-up" : "price-down");
-
-    const el7d = document.getElementById("change7d");
-    el7d.textContent = (ch7d >= 0 ? "+" : "") + ch7d.toFixed(2) + "%";
-    el7d.className = "orbitron text-base sm:text-lg font-bold " + (ch7d >= 0 ? "price-up" : "price-down");
+    document.getElementById("change1h").textContent = (ch1h >= 0 ? "+" : "") + ch1h.toFixed(2) + "%";
+    document.getElementById("change1h").className = "orbitron text-base sm:text-lg font-bold " + (ch1h >= 0 ? "price-up" : "price-down");
+    document.getElementById("change7d").textContent = (ch7d >= 0 ? "+" : "") + ch7d.toFixed(2) + "%";
+    document.getElementById("change7d").className = "orbitron text-base sm:text-lg font-bold " + (ch7d >= 0 ? "price-up" : "price-down");
 
     const ath = md.ath.usd;
     const dist = ((price - ath) / ath * 100).toFixed(1);
-    const athEl = document.getElementById("athDist");
-    athEl.textContent = dist + "%";
-    athEl.className = "orbitron text-base sm:text-lg font-bold " + (dist >= 0 ? "price-up" : "price-down");
+    document.getElementById("athDist").textContent = dist + "%";
+    document.getElementById("athDist").className = "orbitron text-base sm:text-lg font-bold " + (dist >= 0 ? "price-up" : "price-down");
 
     document.getElementById("circ").textContent = (md.circulating_supply / 1e9).toFixed(2) + "B";
     document.getElementById("totalSupply").textContent = (md.total_supply / 1e9).toFixed(1) + "B";
-
     document.getElementById("updated").textContent = new Date().toISOString().substr(11, 8) + " UTC";
   } catch (e) {}
 
@@ -225,7 +240,6 @@ async function updateAll() {
     document.getElementById("fngLabel").textContent = data.data[0].value_classification;
   } catch (e) {}
 
-  // News
   try {
     const sources = [
       { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
@@ -253,85 +267,7 @@ async function updateAll() {
 updateAll();
 setInterval(updateAll, 20000);
 
-// ===== FUTURISTIC PROFESSIONAL CHART (Binance 5m) =====
-const chartContainer = document.getElementById('xrp-chart');
-const chart = LightweightCharts.createChart(chartContainer, {
-  layout: { background: { color: '#0a0a12' }, textColor: '#a8a8c8' },
-  grid: {
-    vertLines: { color: 'rgba(0, 240, 255, 0.06)' },
-    horzLines: { color: 'rgba(0, 240, 255, 0.06)' }
-  },
-  crosshair: {
-    mode: LightweightCharts.CrosshairMode.Normal,
-    vertLine: { color: 'rgba(0,240,255,0.45)', width: 1, style: 2 },
-    horzLine: { color: 'rgba(0,240,255,0.45)', width: 1, style: 2 }
-  },
-  rightPriceScale: { borderColor: 'rgba(0,240,255,0.2)', scaleMargins: { top: 0.1, bottom: 0.2 } },
-  timeScale: { borderColor: 'rgba(0,240,255,0.2)', timeVisible: true, secondsVisible: false },
-  handleScroll: true,
-  handleScale: true
-});
-
-const candleSeries = chart.addCandlestickSeries({
-  upColor: '#00ff9d',
-  downColor: '#ff2a6d',
-  borderUpColor: '#00ff9d',
-  borderDownColor: '#ff2a6d',
-  wickUpColor: '#00ff9d',
-  wickDownColor: '#ff2a6d'
-});
-
-const volumeSeries = chart.addHistogramSeries({
-  priceFormat: { type: 'volume' },
-  priceScaleId: '',
-  scaleMargins: { top: 0.8, bottom: 0 }
-});
-
-async function loadHistory() {
-  try {
-    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=XRPUSDT&interval=5m&limit=200');
-    const data = await res.json();
-    const candles = data.map(d => ({
-      time: Math.floor(d[0] / 1000),
-      open: +d[1], high: +d[2], low: +d[3], close: +d[4]
-    }));
-    const volumes = data.map(d => ({
-      time: Math.floor(d[0] / 1000),
-      value: +d[5],
-      color: +d[4] >= +d[1] ? 'rgba(0,255,157,0.4)' : 'rgba(255,42,109,0.4)'
-    }));
-    candleSeries.setData(candles);
-    volumeSeries.setData(volumes);
-    chart.timeScale().fitContent();
-  } catch (e) {}
-}
-
-function connectLive() {
-  const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@kline_5m');
-  ws.onmessage = (e) => {
-    const k = JSON.parse(e.data).k;
-    const candle = { time: Math.floor(k.t / 1000), open: +k.o, high: +k.h, low: +k.l, close: +k.c };
-    candleSeries.update(candle);
-    volumeSeries.update({
-      time: Math.floor(k.t / 1000),
-      value: +k.v,
-      color: +k.c >= +k.o ? 'rgba(0,255,157,0.4)' : 'rgba(255,42,109,0.4)'
-    });
-    const el = document.getElementById('chart-price');
-    el.textContent = (+k.c).toFixed(4);
-    el.className = 'orbitron text-xs sm:text-sm font-bold ' + (+k.c >= +k.o ? 'price-up' : 'price-down');
-  };
-  ws.onclose = () => setTimeout(connectLive, 3000);
-}
-
-const ro = new ResizeObserver(() => {
-  chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
-});
-ro.observe(chartContainer);
-
-loadHistory().then(connectLive);
-
-// ===== XRPL =====
+// XRPL
 const txFeed = document.getElementById("txFeed");
 let lastTxTime = 0;
 function connectXRPL() {
@@ -345,8 +281,7 @@ function connectXRPL() {
       const msg = JSON.parse(event.data);
       if (msg.type === "ledgerClosed" || (msg.ledger_index && msg.txn_count !== undefined)) {
         if (msg.ledger_index) document.getElementById("ledgerIdx").textContent = Number(msg.ledger_index).toLocaleString();
-        const burned = (((msg.fee_base || 10) * (msg.txn_count || 0)) / 1e6).toFixed(6);
-        document.getElementById("ledgerBurn").textContent = burned + " XRP";
+        document.getElementById("ledgerBurn").textContent = (((msg.fee_base || 10) * (msg.txn_count || 0)) / 1e6).toFixed(6) + " XRP";
       }
       if (msg.transaction?.TransactionType === "Payment") {
         const now = Date.now();
@@ -367,7 +302,7 @@ function connectXRPL() {
 }
 connectXRPL();
 
-// ===== Globe =====
+// Globe
 const globe = Globe()(document.getElementById("globeViz"))
   .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-night.jpg")
   .backgroundColor("rgba(0,0,0,0)")
