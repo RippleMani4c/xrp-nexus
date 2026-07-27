@@ -96,7 +96,7 @@
 <footer class="mt-8 border-t border-cyan-500/30 bg-black/50">
   <div class="px-4 py-2 flex items-center gap-3 border-b border-cyan-500/20">
     <span class="orbitron text-xs text-cyan-400 tracking-widest">LIVE NEWS</span>
-    <span class="text-xs text-white/40">• CoinDesk + Cointelegraph</span>
+    <span class="text-xs text-white/40">• CoinDesk • Cointelegraph • Decrypt • Verified</span>
     <span class="ml-auto text-xs text-purple-400">@RippleMani4c</span>
   </div>
   <div class="overflow-hidden py-3">
@@ -147,20 +147,22 @@ async function updateAll() {
     document.getElementById("fngLabel").textContent = data.data[0].value_classification;
   } catch(e) {}
 
-  // News
+  // News from reliable 3rd-party sources
   try {
     const sources = [
       {name:"CoinDesk", url:"https://www.coindesk.com/arc/outboundfeeds/rss/"},
-      {name:"Cointelegraph", url:"https://cointelegraph.com/rss"}
+      {name:"Cointelegraph", url:"https://cointelegraph.com/rss"},
+      {name:"Decrypt", url:"https://decrypt.co/feed"}
     ];
     let items = [];
     for (const s of sources) {
-      const r = await fetch("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(s.url) + "&count=5");
+      const r = await fetch("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(s.url) + "&count=4");
       const data = await r.json();
       if (data.items) data.items.forEach(it => items.push({source:s.name, title:it.title, link:it.link}));
     }
+    // Prioritize XRP / Ripple
     items.sort((a,b) => (/xrp|ripple/i.test(a.title)?0:1) - (/xrp|ripple/i.test(b.title)?0:1));
-    items = items.slice(0,10);
+    items = items.slice(0,12);
     if (items.length) {
       const html = items.map(it => `<span class="inline-block mx-8 text-sm"><a href="${it.link}" target="_blank" rel="noopener" class="hover:underline"><span class="text-cyan-400 font-bold">${it.source}</span> — ${it.title}</a></span>`).join("");
       document.getElementById("news-ticker").innerHTML = html + html;
