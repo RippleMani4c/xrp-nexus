@@ -73,23 +73,24 @@
     <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">Fear & Greed</p><p id="fng" class="orbitron text-xl font-bold">--</p><p id="fngLabel" class="text-xs text-white/50 mt-0.5">--</p></div>
   </section>
 
-  <!-- ========== FUTURISTIC REAL-TIME XRP CHART ========== -->
+  <!-- ========== FUTURISTIC REAL-TIME 1m CHART ========== -->
   <section class="glass rounded-2xl overflow-hidden glow-border">
     <div class="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/50">
       <div class="flex items-center gap-3">
         <span class="orbitron text-sm md:text-base text-cyan-400 tracking-wider font-bold">LIVE XRP CHART</span>
-        <span class="text-xs text-white/40 hidden sm:inline">XRP/USDT • Binance 15m • Real-time</span>
+        <span class="text-xs text-white/40 hidden sm:inline">XRP/USDT • 1-MINUTE • REAL-TIME</span>
       </div>
       <div class="flex items-center gap-3">
         <span id="chart-price" class="orbitron text-sm font-bold text-cyan-300">--</span>
-        <div class="flex items-center gap-1.5 text-xs text-white/50">
+        <div class="flex items-center gap-1.5 text-xs text-green-400">
           <span class="w-1.5 h-1.5 rounded-full bg-green-400 pulse"></span>
           <span>STREAMING</span>
         </div>
       </div>
     </div>
 
-    <div id="xrp-chart" class="h-[420px] md:h-[600px] lg:h-[820px] xl:h-[880px] w-full"></div>
+    <!-- Different heights: phone vs desktop -->
+    <div id="xrp-chart" class="h-[380px] md:h-[520px] lg:h-[780px] xl:h-[860px] w-full"></div>
   </section>
   <!-- ========== END CHART ========== -->
 
@@ -208,28 +209,29 @@ async function updateAll() {
 updateAll();
 setInterval(updateAll, 15000);
 
-// === FUTURISTIC REAL-TIME CHART ===
+// === FUTURISTIC REAL-TIME 1-MINUTE CHART ===
 const chartContainer = document.getElementById('xrp-chart');
+
 const chart = LightweightCharts.createChart(chartContainer, {
   layout: {
     background: { color: '#0a0a12' },
-    textColor: '#a0a0c0',
+    textColor: '#b0b0d0',
   },
   grid: {
-    vertLines: { color: 'rgba(0, 240, 255, 0.06)' },
-    horzLines: { color: 'rgba(0, 240, 255, 0.06)' },
+    vertLines: { color: 'rgba(0, 240, 255, 0.07)' },
+    horzLines: { color: 'rgba(0, 240, 255, 0.07)' },
   },
   crosshair: {
     mode: LightweightCharts.CrosshairMode.Normal,
-    vertLine: { color: 'rgba(0, 240, 255, 0.4)', width: 1, style: 2 },
-    horzLine: { color: 'rgba(0, 240, 255, 0.4)', width: 1, style: 2 },
+    vertLine: { color: 'rgba(0, 240, 255, 0.5)', width: 1, style: 2 },
+    horzLine: { color: 'rgba(0, 240, 255, 0.5)', width: 1, style: 2 },
   },
   rightPriceScale: {
-    borderColor: 'rgba(0, 240, 255, 0.2)',
-    scaleMargins: { top: 0.1, bottom: 0.25 },
+    borderColor: 'rgba(0, 240, 255, 0.25)',
+    scaleMargins: { top: 0.08, bottom: 0.22 },
   },
   timeScale: {
-    borderColor: 'rgba(0, 240, 255, 0.2)',
+    borderColor: 'rgba(0, 240, 255, 0.25)',
     timeVisible: true,
     secondsVisible: false,
   },
@@ -247,73 +249,87 @@ const candleSeries = chart.addCandlestickSeries({
 });
 
 const volumeSeries = chart.addHistogramSeries({
-  color: 'rgba(0, 240, 255, 0.3)',
   priceFormat: { type: 'volume' },
   priceScaleId: '',
-  scaleMargins: { top: 0.8, bottom: 0 },
+  scaleMargins: { top: 0.82, bottom: 0 },
 });
 
-// Load historical 15m candles
+// Load last 4 hours of 1-minute candles
 async function loadHistory() {
   try {
-    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=XRPUSDT&interval=15m&limit=300');
+    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=XRPUSDT&interval=1m&limit=240');
     const data = await res.json();
+
     const candles = data.map(d => ({
-      time: d[0] / 1000,
+      time: Math.floor(d[0] / 1000),
       open: parseFloat(d[1]),
       high: parseFloat(d[2]),
       low: parseFloat(d[3]),
       close: parseFloat(d[4]),
     }));
+
     const volumes = data.map(d => ({
-      time: d[0] / 1000,
+      time: Math.floor(d[0] / 1000),
       value: parseFloat(d[5]),
-      color: parseFloat(d[4]) >= parseFloat(d[1]) ? 'rgba(0, 255, 157, 0.4)' : 'rgba(255, 42, 109, 0.4)',
+      color: parseFloat(d[4]) >= parseFloat(d[1])
+        ? 'rgba(0, 255, 157, 0.45)'
+        : 'rgba(255, 42, 109, 0.45)',
     }));
+
     candleSeries.setData(candles);
     volumeSeries.setData(volumes);
     chart.timeScale().fitContent();
   } catch (e) {
-    console.error('History load failed', e);
+    console.error('History failed', e);
   }
 }
-loadHistory();
 
-// Live WebSocket feed
-let lastCandleTime = 0;
-const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@kline_15m');
-ws.onmessage = (event) => {
-  const msg = JSON.parse(event.data);
-  const k = msg.k;
-  const candle = {
-    time: k.t / 1000,
-    open: parseFloat(k.o),
-    high: parseFloat(k.h),
-    low: parseFloat(k.l),
-    close: parseFloat(k.c),
+// Live 1-minute stream
+function connectLive() {
+  const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@kline_1m');
+
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    const k = msg.k;
+
+    const candle = {
+      time: Math.floor(k.t / 1000),
+      open: parseFloat(k.o),
+      high: parseFloat(k.h),
+      low: parseFloat(k.l),
+      close: parseFloat(k.c),
+    };
+
+    candleSeries.update(candle);
+
+    volumeSeries.update({
+      time: Math.floor(k.t / 1000),
+      value: parseFloat(k.v),
+      color: parseFloat(k.c) >= parseFloat(k.o)
+        ? 'rgba(0, 255, 157, 0.45)'
+        : 'rgba(255, 42, 109, 0.45)',
+    });
+
+    // Live price badge
+    const priceEl = document.getElementById('chart-price');
+    priceEl.textContent = parseFloat(k.c).toFixed(4);
+    priceEl.className = 'orbitron text-sm font-bold ' + 
+      (parseFloat(k.c) >= parseFloat(k.o) ? 'price-up' : 'price-down');
   };
-  const vol = {
-    time: k.t / 1000,
-    value: parseFloat(k.v),
-    color: parseFloat(k.c) >= parseFloat(k.o) ? 'rgba(0, 255, 157, 0.4)' : 'rgba(255, 42, 109, 0.4)',
-  };
 
-  candleSeries.update(candle);
-  volumeSeries.update(vol);
+  ws.onclose = () => setTimeout(connectLive, 2500);
+}
 
-  // Live price badge
-  document.getElementById('chart-price').textContent = parseFloat(k.c).toFixed(4);
-  document.getElementById('chart-price').className = 
-    'orbitron text-sm font-bold ' + (parseFloat(k.c) >= parseFloat(k.o) ? 'price-up' : 'price-down');
-};
-
-// Resize handler
-window.addEventListener('resize', () => {
-  chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
+// Perfect resize for different heights
+const ro = new ResizeObserver(entries => {
+  const { width, height } = entries[0].contentRect;
+  chart.applyOptions({ width, height });
 });
-chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
+ro.observe(chartContainer);
 
-// === XRPL WebSocket ===
+loadHistory().then(connectLive);
+
+// === XRPL ===
 const txFeed = document.getElementById("txFeed");
 const maxTx = 14;
 let lastTxTime = 0;
@@ -332,8 +348,7 @@ function connectXRPL() {
         if (idx) document.getElementById("ledgerIdx").textContent = Number(idx).toLocaleString();
         const feeBase = msg.fee_base || 10;
         const txnCount = msg.txn_count || 0;
-        const burned = ((feeBase * txnCount) / 1e6).toFixed(6);
-        document.getElementById("ledgerBurn").textContent = burned + " XRP";
+        document.getElementById("ledgerBurn").textContent = ((feeBase * txnCount) / 1e6).toFixed(6) + " XRP";
       }
       if (msg.transaction && msg.transaction.TransactionType === "Payment") {
         const now = Date.now();
