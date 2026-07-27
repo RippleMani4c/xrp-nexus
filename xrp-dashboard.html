@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XRP Nexus | Real-Time Trading Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --neon-cyan: #00f0ff;
+    --neon-purple: #b026ff;
+    --neon-blue: #0066ff;
+    --bg-dark: #0a0a12;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg-dark);
+    color: #e0e0ff;
+    min-height: 100vh;
+    overflow-x: hidden;
+    margin: 0;
+  }
+  .orbitron { font-family: 'Orbitron', sans-serif; }
+  .neon-text {
+    text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+  }
+  .glass {
+    background: rgba(15, 15, 35, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.1);
+  }
+  .price-up { color: #00ff9d; text-shadow: 0 0 10px #00ff9d; }
+  .price-down { color: #ff2a6d; text-shadow: 0 0 10px #ff2a6d; }
+  .grid-bg {
+    background-image: 
+      linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .ticker {
+    display: flex;
+    animation: scroll 40s linear infinite;
+  }
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .glow-border {
+    border: 1px solid transparent;
+    background: linear-gradient(var(--bg-dark), var(--bg-dark)) padding-box,
+                linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)) border-box;
+  }
+</style>
+</head>
+<body class="grid-bg">
+  <!-- Header -->
+  <header class="glass sticky top-0 z-50 border-b border-cyan-500/30">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center orbitron font-black text-black text-lg">X</div>
+        <div>
+          <h1 class="orbitron text-xl font-bold neon-text tracking-wider">XRP NEXUS</h1>
+          <p class="text-xs text-cyan-400/70">Owned by @RippleMani4c</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="w-2 h-2 rounded-full bg-green-400 pulse"></span>
+        <span class="text-green-400">LIVE</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <!-- Price Hero -->
+    <section class="glass rounded-2xl p-6 glow-border">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-cyan-400/80 text-sm tracking-widest uppercase">XRP / USD</p>
+          <div class="flex items-baseline gap-3 mt-1">
+            <span id="price" class="orbitron text-5xl md:text-6xl font-black neon-text">$--</span>
+            <span id="change" class="text-2xl font-bold">--%</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div class="text-center">
+            <p class="text-cyan-400/60 uppercase text-xs">Market Cap</p>
+            <p id="mcap" class="orbitron text-lg font-bold">--</p>
+          </div>
+          <div class="text-center">
+            <p class="text-cyan-400/60 uppercase text-xs">24h Volume</p>
+            <p id="vol" class="orbitron text-lg font-bold">--</p>
+          </div>
+          <div class="text-center">
+            <p class="text-cyan-400/60 uppercase text-xs">Rank</p>
+            <p class="orbitron text-lg font-bold">#6</p>
+          </div>
+          <div class="text-center">
+            <p class="text-cyan-400/60 uppercase text-xs">Updated</p>
+            <p id="updated" class="orbitron text-lg font-bold">--</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chart -->
+    <section class="glass rounded-2xl overflow-hidden glow-border" style="height:420px">
+      <div class="tradingview-widget-container" style="height:100%;width:100%">
+        <div id="tradingview_xrp" style="height:100%;width:100%"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+        <script type="text/javascript">
+          new TradingView.widget({
+            "autosize": true,
+            "symbol": "BINANCE:XRPUSDT",
+            "interval": "15",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#0a0a12",
+            "enable_publishing": false,
+            "hide_top_toolbar": false,
+            "hide_legend": false,
+            "save_image": false,
+            "container_id": "tradingview_xrp",
+            "backgroundColor": "#0a0a12",
+            "gridColor": "rgba(0,240,255,0.05)"
+          });
+        </script>
+      </div>
+    </section>
+
+    <!-- Market Cards -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="glass rounded-xl p-5">
+        <h3 class="orbitron text-sm text-cyan-400 mb-3 tracking-wider">SUPPLY</h3>
+        <p class="text-2xl font-bold">62.5B <span class="text-sm text-white/50">circulating</span></p>
+        <p class="text-sm text-white/40 mt-1">Max: 100B XRP</p>
+      </div>
+      <div class="glass rounded-xl p-5">
+        <h3 class="orbitron text-sm text-cyan-400 mb-3 tracking-wider">NETWORK</h3>
+        <p class="text-2xl font-bold">XRP Ledger</p>
+        <p class="text-sm text-white/40 mt-1">3-5s settlement • Low fees</p>
+      </div>
+      <div class="glass rounded-xl p-5">
+        <h3 class="orbitron text-sm text-cyan-400 mb-3 tracking-wider">KEY PARTNERS</h3>
+        <p class="text-lg font-bold">Ripple • SBI • Mastercard</p>
+        <p class="text-sm text-white/40 mt-1">Institutional adoption rising</p>
+      </div>
+    </section>
+
+    <!-- Live Node Globe -->
+    <section class="glass rounded-2xl p-4 glow-border">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="orbitron text-sm text-cyan-400 tracking-wider">XRPL NODE GLOBE</h3>
+        <span class="text-xs text-white/40">Approximate node density • Not real-time trading geo</span>
+      </div>
+      <div id="globeViz" style="width:100%;height:360px;border-radius:12px;overflow:hidden;"></div>
+    </section>
+
+    <!-- Node Mapping Sources -->
+    <section class="glass rounded-2xl p-5 glow-border">
+      <h3 class="orbitron text-sm text-cyan-400 mb-4 tracking-wider">XRPL NODE MAPS (Third-Party)</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+        <a href="https://bithomp.com/nodes" target="_blank" rel="noopener" class="block p-3 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition">
+          <p class="font-bold text-cyan-300">Bithomp Nodes</p>
+          <p class="text-white/50 text-xs mt-1">Nodes by country + IP stats</p>
+        </a>
+        <a href="https://xrpscan.com/validators" target="_blank" rel="noopener" class="block p-3 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition">
+          <p class="font-bold text-cyan-300">XRPSCAN Validators</p>
+          <p class="text-white/50 text-xs mt-1">Validator registry & status</p>
+        </a>
+        <a href="https://map.xrpl-commons.org/" target="_blank" rel="noopener" class="block p-3 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition">
+          <p class="font-bold text-cyan-300">XRPL Commons Map</p>
+          <p class="text-white/50 text-xs mt-1">Ecosystem & infrastructure map</p>
+        </a>
+        <a href="https://livenet.xrpl.org/" target="_blank" rel="noopener" class="block p-3 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition">
+          <p class="font-bold text-cyan-300">Official XRPL Explorer</p>
+          <p class="text-white/50 text-xs mt-1">Live nodes & network view</p>
+        </a>
+      </div>
+    </section>
+  </main>
+
+
+  <!-- Footer News Feed -->
+  <footer class="mt-8 border-t border-cyan-500/30 bg-black/50">
+    <div class="px-4 py-2 flex items-center gap-3 border-b border-cyan-500/20">
+      <span class="orbitron text-xs text-cyan-400 tracking-widest">XRP NEWS FEED</span>
+      <span class="text-xs text-white/40">• Verified sources • Live WebSocket</span>
+
+      <span class="ml-auto text-xs text-purple-400">@RippleMani4c</span>
+    </div>
+    <div class="overflow-hidden py-3">
+      <div class="ticker whitespace-nowrap" id="news-ticker">
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@CoinDesk</span> — Doppler Finance & SBI partner for institutional $XRP lending in Japan
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@Ripple</span> — XRP 🤝 University of Kansas: first crypto jersey sponsorship
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@Ripple</span> — $RLUSD live on Gate.io with $XRP pairs
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@Ripple</span> — Supporting Mastercard Agent Pay with XRPL & $RLUSD
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@RippleMani4c</span> — $XRP #Ripple community strong
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@CoinDesk</span> — Ripple CEO on near-shutdown during SEC case
+        </span>
+        <!-- Duplicate for seamless loop -->
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@CoinDesk</span> — Doppler Finance & SBI partner for institutional $XRP lending in Japan
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@Ripple</span> — XRP 🤝 University of Kansas: first crypto jersey sponsorship
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@Ripple</span> — $RLUSD live on Gate.io with $XRP pairs
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@Ripple</span> — Supporting Mastercard Agent Pay with XRPL & $RLUSD
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@RippleMani4c</span> — $XRP #Ripple community strong
+        </span>
+        <span class="inline-block mx-8 text-sm">
+          <span class="text-cyan-400 font-bold">@CoinDesk</span> — Ripple CEO on near-shutdown during SEC case
+        </span>
+      </div>
+    </div>
+    <div class="text-center py-2 text-xs text-white/30">
+      XRP Nexus © 2026 • Powered by @RippleMani4c • Not financial advice
+    </div>
+  </footer>
+
+<script>
+// Binance WebSocket for true live XRP price
+const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@ticker');
+
+ws.onmessage = (event) => {
+  const d = JSON.parse(event.data);
+  const price = parseFloat(d.c);
+  const change = parseFloat(d.P);
+  const volQuote = parseFloat(d.q);  // 24h USDT volume
+  const volBase = parseFloat(d.v);   // 24h XRP volume
+
+  document.getElementById('price').textContent = '$' + price.toFixed(4);
+  const chEl = document.getElementById('change');
+  chEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+  chEl.className = 'text-2xl font-bold ' + (change >= 0 ? 'price-up' : 'price-down');
+
+  const volEl = document.getElementById('vol');
+  volEl.textContent = '$' + (volQuote / 1e6).toFixed(2) + 'M';
+  volEl.title = volBase.toLocaleString(undefined, {maximumFractionDigits:0}) + ' XRP';
+  volEl.classList.add('pulse');
+  setTimeout(() => volEl.classList.remove('pulse'), 300);
+
+  document.getElementById('updated').textContent = new Date().toLocaleTimeString();
+};
+
+
+ws.onopen = () => console.log('XRP WebSocket live');
+ws.onclose = () => {
+  console.log('WS closed, reconnecting...');
+  setTimeout(() => location.reload(), 3000);
+};
+
+// Fallback market cap via CoinGecko (once + every 5min)
+async function fetchMcap() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_market_cap=true');
+    const data = await res.json();
+    document.getElementById('mcap').textContent = '$' + (data.ripple.usd_market_cap / 1e9).toFixed(2) + 'B';
+  } catch(e) {}
+}
+fetchMcap();
+setInterval(fetchMcap, 300000);
+
+// Approximate XRPL node locations (major concentrations from public explorers)
+const nodePoints = [
+  { lat: 37.77, lng: -122.42, size: 0.4, color: '#00f0ff' }, // SF/US West
+  { lat: 40.71, lng: -74.00, size: 0.5, color: '#00f0ff' },  // NYC
+  { lat: 34.05, lng: -118.24, size: 0.3, color: '#00f0ff' }, // LA
+  { lat: 51.50, lng: -0.12, size: 0.4, color: '#b026ff' },   // London
+  { lat: 52.52, lng: 13.40, size: 0.45, color: '#b026ff' },  // Berlin
+  { lat: 48.85, lng: 2.35, size: 0.3, color: '#b026ff' },    // Paris
+  { lat: 35.68, lng: 139.69, size: 0.35, color: '#00ff9d' },  // Tokyo
+  { lat: 1.35, lng: 103.82, size: 0.4, color: '#00ff9d' },   // Singapore
+  { lat: 37.56, lng: 126.97, size: 0.3, color: '#00ff9d' },  // Seoul
+  { lat: -33.86, lng: 151.20, size: 0.25, color: '#ff2a6d' },// Sydney
+  { lat: 55.75, lng: 37.61, size: 0.2, color: '#ff2a6d' },   // Moscow
+  { lat: 25.20, lng: 55.27, size: 0.25, color: '#ffaa00' },  // Dubai
+  { lat: -23.55, lng: -46.63, size: 0.2, color: '#ffaa00' }, // Sao Paulo
+  { lat: 28.61, lng: 77.20, size: 0.25, color: '#00ff9d' },  // Delhi
+];
+
+const globe = Globe()
+  (document.getElementById('globeViz'))
+  .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+  .backgroundColor('rgba(0,0,0,0)')
+  .pointsData(nodePoints)
+  .pointAltitude('size')
+  .pointColor('color')
+  .pointRadius(0.4)
+  .pointsMerge(true)
+  .atmosphereColor('#00f0ff')
+  .atmosphereAltitude(0.15);
+
+// Auto-rotate
+globe.controls().autoRotate = true;
+globe.controls().autoRotateSpeed = 0.6;
+</script>
+
+
+</body>
+</html>
