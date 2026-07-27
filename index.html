@@ -22,6 +22,9 @@
   .pulse { animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
   .glow-border { border: 1px solid transparent; background: linear-gradient(var(--bg-dark),var(--bg-dark)) padding-box, linear-gradient(135deg,var(--neon-cyan),var(--neon-purple)) border-box; }
+  #txFeed { max-height: 180px; overflow-y: auto; font-size: 11px; }
+  #txFeed::-webkit-scrollbar { width: 4px; }
+  #txFeed::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.3); border-radius: 2px; }
 </style>
 </head>
 <body class="grid-bg">
@@ -31,7 +34,7 @@
       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center orbitron font-black text-black text-lg">X</div>
       <div>
         <h1 class="orbitron text-xl font-bold neon-text tracking-wider">XRP NEXUS</h1>
-        <p class="text-xs text-cyan-400/70">@RippleMani4c • CoinGecko</p>
+        <p class="text-xs text-cyan-400/70">@RippleMani4c • CoinGecko + XRPL</p>
       </div>
     </div>
     <div class="flex items-center gap-2 text-xs">
@@ -42,7 +45,6 @@
 </header>
 
 <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-  <!-- Price Hero -->
   <section class="glass rounded-2xl p-6 glow-border">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
@@ -61,7 +63,6 @@
     </div>
   </section>
 
-  <!-- Metrics -->
   <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
     <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">24h High</p><p id="high24" class="orbitron text-xl font-bold">--</p></div>
     <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">24h Low</p><p id="low24" class="orbitron text-xl font-bold">--</p></div>
@@ -69,7 +70,6 @@
     <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">Fear & Greed</p><p id="fng" class="orbitron text-xl font-bold">--</p><p id="fngLabel" class="text-xs text-white/50 mt-0.5">--</p></div>
   </section>
 
-  <!-- Chart -->
   <section class="glass rounded-2xl overflow-hidden glow-border" style="height:380px">
     <div id="tradingview_xrp" style="height:100%;width:100%"></div>
     <script src="https://s3.tradingview.com/tv.js"></script>
@@ -83,20 +83,28 @@
     </script>
   </section>
 
-  <!-- Spinning Globe -->
-  <section class="glass rounded-2xl p-4 glow-border">
+  <!-- Globe + XRPL Live Transactions -->
+  <section class="glass rounded-2xl p-4 glow-border relative">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="orbitron text-sm text-cyan-400 tracking-wider">EARTH VIEW</h3>
-      <span class="text-xs text-white/40">Data via CoinGecko • 15s refresh</span>
+      <h3 class="orbitron text-sm text-cyan-400 tracking-wider">EARTH • LIVE XRPL TRANSACTIONS</h3>
+      <span class="text-xs text-white/40">Public XRPL endpoint</span>
     </div>
-    <div id="globeViz" style="width:100%;height:360px;border-radius:12px;overflow:hidden;"></div>
+    <div class="relative" style="height:380px;">
+      <div id="globeViz" style="width:100%;height:100%;border-radius:12px;overflow:hidden;"></div>
+      <div class="absolute top-3 left-3 right-3 md:right-auto md:w-80 glass rounded-lg p-3 border border-cyan-500/30" style="max-height:220px; z-index:20;">
+        <p class="orbitron text-xs text-cyan-400 mb-2 tracking-wider">LIVE XRPL PAYMENTS</p>
+        <div id="txFeed" class="space-y-1 font-mono">
+          <div class="text-white/40">Connecting to XRPL...</div>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 
 <footer class="mt-8 border-t border-cyan-500/30 bg-black/50">
   <div class="px-4 py-2 flex items-center gap-3 border-b border-cyan-500/20">
     <span class="orbitron text-xs text-cyan-400 tracking-widest">LIVE NEWS</span>
-    <span class="text-xs text-white/40">• CoinDesk • Cointelegraph • Decrypt • Verified</span>
+    <span class="text-xs text-white/40">• CoinDesk • Cointelegraph • Decrypt</span>
     <span class="ml-auto text-xs text-purple-400">@RippleMani4c</span>
   </div>
   <div class="overflow-hidden py-3">
@@ -104,42 +112,35 @@
       <span class="inline-block mx-8 text-sm text-white/50">Loading news...</span>
     </div>
   </div>
-  <div class="text-center py-2 text-xs text-white/30">XRP Nexus © 2026 • CoinGecko powered • Not financial advice</div>
+  <div class="text-center py-2 text-xs text-white/30">XRP Nexus © 2026 • CoinGecko + XRPL public • Not financial advice</div>
 </footer>
 
 <script>
+// === CoinGecko metrics (every 15s) ===
 async function updateAll() {
-  // CoinGecko full coin data
   try {
     const r = await fetch("https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false");
     const data = await r.json();
     const md = data.market_data;
-
     const price = md.current_price.usd;
     const change = md.price_change_percentage_24h;
     document.getElementById("price").textContent = "$" + price.toFixed(4);
     const ch = document.getElementById("change");
     ch.textContent = (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
     ch.className = "text-2xl font-bold " + (change >= 0 ? "price-up" : "price-down");
-
     document.getElementById("mcap").textContent = "$" + (md.market_cap.usd / 1e9).toFixed(2) + "B";
     document.getElementById("vol").textContent = "$" + (md.total_volume.usd / 1e6).toFixed(2) + "M";
     document.getElementById("rank").textContent = "#" + data.market_cap_rank;
     document.getElementById("high24").textContent = "$" + md.high_24h.usd.toFixed(4);
     document.getElementById("low24").textContent = "$" + md.low_24h.usd.toFixed(4);
-
     const ath = md.ath.usd;
     const dist = ((price - ath) / ath * 100).toFixed(1);
     const athEl = document.getElementById("athDist");
     athEl.textContent = dist + "%";
     athEl.className = "orbitron text-xl font-bold " + (dist >= 0 ? "price-up" : "price-down");
-
     document.getElementById("updated").textContent = new Date().toLocaleTimeString();
-  } catch(e) {
-    console.log("CoinGecko error", e);
-  }
+  } catch(e) {}
 
-  // Fear & Greed
   try {
     const r = await fetch("https://api.alternative.me/fng/?limit=1");
     const data = await r.json();
@@ -147,7 +148,6 @@ async function updateAll() {
     document.getElementById("fngLabel").textContent = data.data[0].value_classification;
   } catch(e) {}
 
-  // News from reliable 3rd-party sources
   try {
     const sources = [
       {name:"CoinDesk", url:"https://www.coindesk.com/arc/outboundfeeds/rss/"},
@@ -160,20 +160,67 @@ async function updateAll() {
       const data = await r.json();
       if (data.items) data.items.forEach(it => items.push({source:s.name, title:it.title, link:it.link}));
     }
-    // Prioritize XRP / Ripple
     items.sort((a,b) => (/xrp|ripple/i.test(a.title)?0:1) - (/xrp|ripple/i.test(b.title)?0:1));
     items = items.slice(0,12);
     if (items.length) {
-      const html = items.map(it => `<span class="inline-block mx-8 text-sm"><a href="${it.link}" target="_blank" rel="noopener" class="hover:underline"><span class="text-cyan-400 font-bold">${it.source}</span> — ${it.title}</a></span>`).join("");
-      document.getElementById("news-ticker").innerHTML = html + html;
+      const h = items.map(it => `<span class="inline-block mx-8 text-sm"><a href="${it.link}" target="_blank" rel="noopener" class="hover:underline"><span class="text-cyan-400 font-bold">${it.source}</span> — ${it.title}</a></span>`).join("");
+      document.getElementById("news-ticker").innerHTML = h + h;
     }
   } catch(e) {}
 }
-
 updateAll();
-setInterval(updateAll, 15000); // every 15 seconds
+setInterval(updateAll, 15000);
 
-// Spinning globe (clean)
+// === XRPL public WebSocket for live transactions ===
+const txFeed = document.getElementById("txFeed");
+const maxTx = 14;
+let lastTxTime = 0;
+
+function connectXRPL() {
+  const ws = new WebSocket("wss://xrplcluster.com");
+  ws.onopen = () => {
+    txFeed.innerHTML = '<div class="text-green-400">XRPL connected – streaming payments...</div>';
+    ws.send(JSON.stringify({ id: 1, command: "subscribe", streams: ["transactions"] }));
+  };
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (!msg.transaction || msg.transaction.TransactionType !== "Payment") return;
+
+      const now = Date.now();
+      if (now - lastTxTime < 300) return; // throttle display
+      lastTxTime = now;
+
+      const tx = msg.transaction;
+      let amount = tx.Amount;
+      if (typeof amount === "object") return; // skip issued currencies for simplicity
+      amount = (parseInt(amount) / 1e6).toFixed(2); // drops to XRP
+
+      const from = (tx.Account || "").slice(0, 6) + "…";
+      const to = (tx.Destination || "").slice(0, 6) + "…";
+      const time = new Date().toLocaleTimeString();
+
+      const row = document.createElement("div");
+      row.className = "flex justify-between gap-1 text-cyan-300";
+      row.innerHTML = `<span>${amount} XRP</span><span class="text-white/50">${from}→${to}</span><span class="text-white/30 text-[10px]">${time}</span>`;
+      txFeed.prepend(row);
+
+      while (txFeed.children.length > maxTx) {
+        txFeed.removeChild(txFeed.lastChild);
+      }
+    } catch(e) {}
+  };
+  ws.onerror = () => {
+    txFeed.innerHTML = '<div class="text-red-400">XRPL connection error</div>';
+  };
+  ws.onclose = () => {
+    txFeed.innerHTML = '<div class="text-yellow-400">Disconnected – reconnecting...</div>';
+    setTimeout(connectXRPL, 4000);
+  };
+}
+connectXRPL();
+
+// === Clean spinning globe ===
 const globe = Globe()(document.getElementById("globeViz"))
   .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
   .backgroundColor("rgba(0,0,0,0)")
