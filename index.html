@@ -15,13 +15,13 @@
   .orbitron { font-family: "Orbitron", sans-serif; }
   .neon-text { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
   .glass { background: rgba(15,15,35,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(0,240,255,0.2); }
-  .price-up { color: #00ff9d; text-shadow: 0 0 10px #00ff9d; }
-  .price-down { color: #ff2a6d; text-shadow: 0 0 10px #ff2a6d; }
+  .price-up { color: #00ff9d; text-shadow: 0 0 8px #00ff9d; }
+  .price-down { color: #ff2a6d; text-shadow: 0 0 8px #ff2a6d; }
   .grid-bg { background-image: linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px); background-size: 40px 40px; }
   .ticker { display: flex; animation: scroll 45s linear infinite; }
   @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   .pulse { animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
   .glow-border { border: 1px solid transparent; background: linear-gradient(var(--bg-dark),var(--bg-dark)) padding-box, linear-gradient(135deg,var(--neon-cyan),var(--neon-purple)) border-box; }
   #txFeed { max-height: 100px; overflow-y: auto; font-size: 11px; }
   #txFeed::-webkit-scrollbar { width: 4px; }
@@ -35,7 +35,7 @@
       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center orbitron font-black text-black text-lg">X</div>
       <div>
         <h1 class="orbitron text-xl font-bold neon-text tracking-wider">XRP NEXUS</h1>
-        <p class="text-xs text-cyan-400/70">@RippleMani4c • CoinGecko + XRPL</p>
+        <p class="text-xs text-cyan-400/70">@RippleMani4c • CoinGecko + XRPL + Binance</p>
       </div>
     </div>
     <div class="flex items-center gap-2 text-xs">
@@ -45,18 +45,19 @@
   </div>
 </header>
 
-<main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-  <!-- Price header -->
-  <section class="glass rounded-2xl p-6 glow-border">
+<main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
+
+  <!-- Main Price -->
+  <section class="glass rounded-2xl p-5 sm:p-6 glow-border">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p class="text-cyan-400/80 text-sm tracking-widest uppercase">XRP / USD</p>
         <div class="flex items-baseline gap-3 mt-1">
-          <span id="price" class="orbitron text-5xl md:text-6xl font-black neon-text">--</span>
-          <span id="change" class="text-2xl font-bold">--</span>
+          <span id="price" class="orbitron text-4xl sm:text-5xl md:text-6xl font-black neon-text">--</span>
+          <span id="change" class="text-xl sm:text-2xl font-bold">--</span>
         </div>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
         <div class="text-center"><p class="text-cyan-400/60 uppercase text-xs">Market Cap</p><p id="mcap" class="orbitron text-lg font-bold">--</p></div>
         <div class="text-center"><p class="text-cyan-400/60 uppercase text-xs">24h Volume</p><p id="vol" class="orbitron text-lg font-bold">--</p></div>
         <div class="text-center"><p class="text-cyan-400/60 uppercase text-xs">Rank</p><p id="rank" class="orbitron text-lg font-bold">--</p></div>
@@ -65,64 +66,92 @@
     </div>
   </section>
 
-  <!-- Stats row -->
-  <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">24h High</p><p id="high24" class="orbitron text-xl font-bold">--</p></div>
-    <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">24h Low</p><p id="low24" class="orbitron text-xl font-bold">--</p></div>
-    <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">From ATH</p><p id="athDist" class="orbitron text-xl font-bold">--</p></div>
-    <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">Fear & Greed</p><p id="fng" class="orbitron text-xl font-bold">--</p><p id="fngLabel" class="text-xs text-white/50 mt-0.5">--</p></div>
+  <!-- Expanded Real-time Stats (more info on desktop) -->
+  <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">24h High</p>
+      <p id="high24" class="orbitron text-base sm:text-lg font-bold">--</p>
+    </div>
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">24h Low</p>
+      <p id="low24" class="orbitron text-base sm:text-lg font-bold">--</p>
+    </div>
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">1h Change</p>
+      <p id="change1h" class="orbitron text-base sm:text-lg font-bold">--</p>
+    </div>
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">7d Change</p>
+      <p id="change7d" class="orbitron text-base sm:text-lg font-bold">--</p>
+    </div>
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">From ATH</p>
+      <p id="athDist" class="orbitron text-base sm:text-lg font-bold">--</p>
+    </div>
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">Fear & Greed</p>
+      <p id="fng" class="orbitron text-base sm:text-lg font-bold">--</p>
+      <p id="fngLabel" class="text-[10px] text-white/50">--</p>
+    </div>
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">Circulating</p>
+      <p id="circ" class="orbitron text-base sm:text-lg font-bold">--</p>
+    </div>
+    <div class="glass rounded-xl p-3 text-center">
+      <p class="text-cyan-400/60 uppercase text-[10px] mb-1">Total Supply</p>
+      <p id="totalSupply" class="orbitron text-base sm:text-lg font-bold">--</p>
+    </div>
   </section>
 
-  <!-- ========== FUTURISTIC REAL-TIME 1m CHART ========== -->
+  <!-- ========== PROFESSIONAL FUTURISTIC CHART ========== -->
   <section class="glass rounded-2xl overflow-hidden glow-border">
-    <div class="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20 bg-black/50">
-      <div class="flex items-center gap-3">
-        <span class="orbitron text-sm md:text-base text-cyan-400 tracking-wider font-bold">LIVE XRP CHART</span>
-        <span class="text-xs text-white/40 hidden sm:inline">XRP/USDT • 1-MINUTE • REAL-TIME</span>
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-cyan-500/20 bg-black/40">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span class="orbitron text-xs sm:text-sm text-cyan-400 tracking-wider font-bold">LIVE CHART</span>
+        <span class="text-[10px] sm:text-xs text-white/40">XRP/USDT • Binance 5m</span>
       </div>
-      <div class="flex items-center gap-3">
-        <span id="chart-price" class="orbitron text-sm font-bold text-cyan-300">--</span>
-        <div class="flex items-center gap-1.5 text-xs text-green-400">
+      <div class="flex items-center gap-2">
+        <span id="chart-price" class="orbitron text-xs sm:text-sm font-bold text-cyan-300">--</span>
+        <div class="flex items-center gap-1 text-[10px] text-green-400">
           <span class="w-1.5 h-1.5 rounded-full bg-green-400 pulse"></span>
-          <span>STREAMING</span>
+          <span class="hidden sm:inline">LIVE</span>
         </div>
       </div>
     </div>
 
-    <!-- Different heights: phone vs desktop -->
-    <div id="xrp-chart" class="h-[380px] md:h-[520px] lg:h-[780px] xl:h-[860px] w-full"></div>
+    <!-- Balanced professional heights (not too big) -->
+    <div id="xrp-chart" class="h-[340px] md:h-[420px] lg:h-[520px] w-full"></div>
   </section>
-  <!-- ========== END CHART ========== -->
 
-  <!-- Globe + Live XRPL -->
+  <!-- Globe + XRPL -->
   <section class="glass rounded-2xl p-4 glow-border relative">
     <div class="flex items-center justify-between mb-2">
       <h3 class="orbitron text-sm text-cyan-400 tracking-wider">EARTH • LIVE XRPL TRANSACTIONS</h3>
-      <span class="text-xs text-white/40">Public XRPL endpoint</span>
+      <span class="text-xs text-white/40">Public XRPL</span>
     </div>
-    <div class="relative" style="height: 360px;">
+    <div class="relative" style="height: 340px;">
       <div id="globeViz" style="width:100%;height:100%;border-radius:12px;overflow:hidden;"></div>
-      <div class="absolute top-2 left-2 right-2 z-20 flex flex-col gap-2 max-w-full sm:max-w-2xl">
+      <div class="absolute top-2 left-2 right-2 z-20 flex flex-col gap-2 max-w-full sm:max-w-xl">
         <div class="glass rounded-lg p-2.5 border border-cyan-500/30 w-full">
-          <p class="orbitron text-[10px] sm:text-xs text-cyan-400 mb-1.5 tracking-wider">LIVE XRPL PAYMENTS</p>
-          <div id="txFeed" class="space-y-1 font-mono text-[10px] sm:text-[11px]">
-            <div class="text-white/40">Connecting to XRPL...</div>
+          <p class="orbitron text-[10px] text-cyan-400 mb-1.5 tracking-wider">LIVE XRPL PAYMENTS</p>
+          <div id="txFeed" class="space-y-1 font-mono text-[10px]">
+            <div class="text-white/40">Connecting...</div>
           </div>
         </div>
         <div class="glass rounded-lg p-2.5 border border-cyan-500/30 w-full">
-          <p class="orbitron text-[10px] sm:text-xs text-cyan-400 mb-1.5 tracking-wider">XRP BURN STREAM</p>
-          <div class="flex justify-between gap-3 text-center">
+          <p class="orbitron text-[10px] text-cyan-400 mb-1.5 tracking-wider">XRP BURN STREAM</p>
+          <div class="flex justify-between gap-2 text-center">
             <div class="flex-1">
-              <p class="text-white/40 text-[8px] sm:text-[9px] uppercase">Ledger</p>
-              <p id="ledgerIdx" class="orbitron text-sm sm:text-base font-bold text-cyan-300">--</p>
+              <p class="text-white/40 text-[8px] uppercase">Ledger</p>
+              <p id="ledgerIdx" class="orbitron text-sm font-bold text-cyan-300">--</p>
             </div>
             <div class="flex-1">
-              <p class="text-white/40 text-[8px] sm:text-[9px] uppercase">This Ledger</p>
-              <p id="ledgerBurn" class="orbitron text-sm sm:text-base font-bold text-orange-400">--</p>
+              <p class="text-white/40 text-[8px] uppercase">This Ledger</p>
+              <p id="ledgerBurn" class="orbitron text-sm font-bold text-orange-400">--</p>
             </div>
             <div class="flex-1">
-              <p class="text-white/40 text-[8px] sm:text-[9px] uppercase">Total Est.</p>
-              <p id="totalBurn" class="orbitron text-sm sm:text-base font-bold">14.3M+</p>
+              <p class="text-white/40 text-[8px] uppercase">Total Est.</p>
+              <p id="totalBurn" class="orbitron text-sm font-bold">14.3M+</p>
             </div>
           </div>
         </div>
@@ -142,35 +171,49 @@
       <span class="inline-block mx-8 text-sm text-white/50">Loading news...</span>
     </div>
   </div>
-  <div class="text-center py-2 text-xs text-white/30">XRP Nexus © 2026 • CoinGecko + XRPL public • Not financial advice</div>
+  <div class="text-center py-2 text-xs text-white/30">XRP Nexus © 2026 • Not financial advice</div>
 </footer>
 
 <script>
-// === CoinGecko + Fear&Greed + News ===
+// ===== CoinGecko (expanded real-time data) =====
 async function updateAll() {
   try {
     const r = await fetch("https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false");
     const data = await r.json();
     const md = data.market_data;
     const price = md.current_price.usd;
-    const change = md.price_change_percentage_24h;
+    const change24 = md.price_change_percentage_24h;
 
     document.getElementById("price").textContent = "$" + price.toFixed(4);
     const ch = document.getElementById("change");
-    ch.textContent = (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
-    ch.className = "text-2xl font-bold " + (change >= 0 ? "price-up" : "price-down");
+    ch.textContent = (change24 >= 0 ? "+" : "") + change24.toFixed(2) + "%";
+    ch.className = "text-xl sm:text-2xl font-bold " + (change24 >= 0 ? "price-up" : "price-down");
 
     document.getElementById("mcap").textContent = "$" + (md.market_cap.usd / 1e9).toFixed(2) + "B";
-    document.getElementById("vol").textContent = "$" + (md.total_volume.usd / 1e6).toFixed(2) + "M";
+    document.getElementById("vol").textContent = "$" + (md.total_volume.usd / 1e6).toFixed(0) + "M";
     document.getElementById("rank").textContent = "#" + data.market_cap_rank;
     document.getElementById("high24").textContent = "$" + md.high_24h.usd.toFixed(4);
     document.getElementById("low24").textContent = "$" + md.low_24h.usd.toFixed(4);
+
+    // Extra desktop data
+    const ch1h = md.price_change_percentage_1h_in_currency?.usd || 0;
+    const ch7d = md.price_change_percentage_7d_in_currency?.usd || 0;
+    const el1h = document.getElementById("change1h");
+    el1h.textContent = (ch1h >= 0 ? "+" : "") + ch1h.toFixed(2) + "%";
+    el1h.className = "orbitron text-base sm:text-lg font-bold " + (ch1h >= 0 ? "price-up" : "price-down");
+
+    const el7d = document.getElementById("change7d");
+    el7d.textContent = (ch7d >= 0 ? "+" : "") + ch7d.toFixed(2) + "%";
+    el7d.className = "orbitron text-base sm:text-lg font-bold " + (ch7d >= 0 ? "price-up" : "price-down");
 
     const ath = md.ath.usd;
     const dist = ((price - ath) / ath * 100).toFixed(1);
     const athEl = document.getElementById("athDist");
     athEl.textContent = dist + "%";
-    athEl.className = "orbitron text-xl font-bold " + (dist >= 0 ? "price-up" : "price-down");
+    athEl.className = "orbitron text-base sm:text-lg font-bold " + (dist >= 0 ? "price-up" : "price-down");
+
+    document.getElementById("circ").textContent = (md.circulating_supply / 1e9).toFixed(2) + "B";
+    document.getElementById("totalSupply").textContent = (md.total_supply / 1e9).toFixed(1) + "B";
 
     document.getElementById("updated").textContent = new Date().toISOString().substr(11, 8) + " UTC";
   } catch (e) {}
@@ -182,6 +225,7 @@ async function updateAll() {
     document.getElementById("fngLabel").textContent = data.data[0].value_classification;
   } catch (e) {}
 
+  // News
   try {
     const sources = [
       { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
@@ -207,36 +251,25 @@ async function updateAll() {
   } catch (e) {}
 }
 updateAll();
-setInterval(updateAll, 15000);
+setInterval(updateAll, 20000);
 
-// === FUTURISTIC REAL-TIME 1-MINUTE CHART ===
+// ===== FUTURISTIC PROFESSIONAL CHART (Binance 5m) =====
 const chartContainer = document.getElementById('xrp-chart');
-
 const chart = LightweightCharts.createChart(chartContainer, {
-  layout: {
-    background: { color: '#0a0a12' },
-    textColor: '#b0b0d0',
-  },
+  layout: { background: { color: '#0a0a12' }, textColor: '#a8a8c8' },
   grid: {
-    vertLines: { color: 'rgba(0, 240, 255, 0.07)' },
-    horzLines: { color: 'rgba(0, 240, 255, 0.07)' },
+    vertLines: { color: 'rgba(0, 240, 255, 0.06)' },
+    horzLines: { color: 'rgba(0, 240, 255, 0.06)' }
   },
   crosshair: {
     mode: LightweightCharts.CrosshairMode.Normal,
-    vertLine: { color: 'rgba(0, 240, 255, 0.5)', width: 1, style: 2 },
-    horzLine: { color: 'rgba(0, 240, 255, 0.5)', width: 1, style: 2 },
+    vertLine: { color: 'rgba(0,240,255,0.45)', width: 1, style: 2 },
+    horzLine: { color: 'rgba(0,240,255,0.45)', width: 1, style: 2 }
   },
-  rightPriceScale: {
-    borderColor: 'rgba(0, 240, 255, 0.25)',
-    scaleMargins: { top: 0.08, bottom: 0.22 },
-  },
-  timeScale: {
-    borderColor: 'rgba(0, 240, 255, 0.25)',
-    timeVisible: true,
-    secondsVisible: false,
-  },
+  rightPriceScale: { borderColor: 'rgba(0,240,255,0.2)', scaleMargins: { top: 0.1, bottom: 0.2 } },
+  timeScale: { borderColor: 'rgba(0,240,255,0.2)', timeVisible: true, secondsVisible: false },
   handleScroll: true,
-  handleScale: true,
+  handleScale: true
 });
 
 const candleSeries = chart.addCandlestickSeries({
@@ -245,146 +278,103 @@ const candleSeries = chart.addCandlestickSeries({
   borderUpColor: '#00ff9d',
   borderDownColor: '#ff2a6d',
   wickUpColor: '#00ff9d',
-  wickDownColor: '#ff2a6d',
+  wickDownColor: '#ff2a6d'
 });
 
 const volumeSeries = chart.addHistogramSeries({
   priceFormat: { type: 'volume' },
   priceScaleId: '',
-  scaleMargins: { top: 0.82, bottom: 0 },
+  scaleMargins: { top: 0.8, bottom: 0 }
 });
 
-// Load last 4 hours of 1-minute candles
 async function loadHistory() {
   try {
-    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=XRPUSDT&interval=1m&limit=240');
+    const res = await fetch('https://api.binance.com/api/v3/klines?symbol=XRPUSDT&interval=5m&limit=200');
     const data = await res.json();
-
     const candles = data.map(d => ({
       time: Math.floor(d[0] / 1000),
-      open: parseFloat(d[1]),
-      high: parseFloat(d[2]),
-      low: parseFloat(d[3]),
-      close: parseFloat(d[4]),
+      open: +d[1], high: +d[2], low: +d[3], close: +d[4]
     }));
-
     const volumes = data.map(d => ({
       time: Math.floor(d[0] / 1000),
-      value: parseFloat(d[5]),
-      color: parseFloat(d[4]) >= parseFloat(d[1])
-        ? 'rgba(0, 255, 157, 0.45)'
-        : 'rgba(255, 42, 109, 0.45)',
+      value: +d[5],
+      color: +d[4] >= +d[1] ? 'rgba(0,255,157,0.4)' : 'rgba(255,42,109,0.4)'
     }));
-
     candleSeries.setData(candles);
     volumeSeries.setData(volumes);
     chart.timeScale().fitContent();
-  } catch (e) {
-    console.error('History failed', e);
-  }
+  } catch (e) {}
 }
 
-// Live 1-minute stream
 function connectLive() {
-  const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@kline_1m');
-
-  ws.onmessage = (event) => {
-    const msg = JSON.parse(event.data);
-    const k = msg.k;
-
-    const candle = {
-      time: Math.floor(k.t / 1000),
-      open: parseFloat(k.o),
-      high: parseFloat(k.h),
-      low: parseFloat(k.l),
-      close: parseFloat(k.c),
-    };
-
+  const ws = new WebSocket('wss://stream.binance.com:9443/ws/xrpusdt@kline_5m');
+  ws.onmessage = (e) => {
+    const k = JSON.parse(e.data).k;
+    const candle = { time: Math.floor(k.t / 1000), open: +k.o, high: +k.h, low: +k.l, close: +k.c };
     candleSeries.update(candle);
-
     volumeSeries.update({
       time: Math.floor(k.t / 1000),
-      value: parseFloat(k.v),
-      color: parseFloat(k.c) >= parseFloat(k.o)
-        ? 'rgba(0, 255, 157, 0.45)'
-        : 'rgba(255, 42, 109, 0.45)',
+      value: +k.v,
+      color: +k.c >= +k.o ? 'rgba(0,255,157,0.4)' : 'rgba(255,42,109,0.4)'
     });
-
-    // Live price badge
-    const priceEl = document.getElementById('chart-price');
-    priceEl.textContent = parseFloat(k.c).toFixed(4);
-    priceEl.className = 'orbitron text-sm font-bold ' + 
-      (parseFloat(k.c) >= parseFloat(k.o) ? 'price-up' : 'price-down');
+    const el = document.getElementById('chart-price');
+    el.textContent = (+k.c).toFixed(4);
+    el.className = 'orbitron text-xs sm:text-sm font-bold ' + (+k.c >= +k.o ? 'price-up' : 'price-down');
   };
-
-  ws.onclose = () => setTimeout(connectLive, 2500);
+  ws.onclose = () => setTimeout(connectLive, 3000);
 }
 
-// Perfect resize for different heights
-const ro = new ResizeObserver(entries => {
-  const { width, height } = entries[0].contentRect;
-  chart.applyOptions({ width, height });
+const ro = new ResizeObserver(() => {
+  chart.applyOptions({ width: chartContainer.clientWidth, height: chartContainer.clientHeight });
 });
 ro.observe(chartContainer);
 
 loadHistory().then(connectLive);
 
-// === XRPL ===
+// ===== XRPL =====
 const txFeed = document.getElementById("txFeed");
-const maxTx = 14;
 let lastTxTime = 0;
-
 function connectXRPL() {
   const ws = new WebSocket("wss://xrplcluster.com");
   ws.onopen = () => {
-    txFeed.innerHTML = '<div class="text-green-400">XRPL connected – streaming...</div>';
+    txFeed.innerHTML = '<div class="text-green-400">XRPL connected...</div>';
     ws.send(JSON.stringify({ id: 1, command: "subscribe", streams: ["transactions", "ledger"] }));
   };
   ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
-      if (msg.type === "ledgerClosed" || (msg.ledger_index !== undefined && msg.txn_count !== undefined)) {
-        const idx = msg.ledger_index || msg.ledgerIndex;
-        if (idx) document.getElementById("ledgerIdx").textContent = Number(idx).toLocaleString();
-        const feeBase = msg.fee_base || 10;
-        const txnCount = msg.txn_count || 0;
-        document.getElementById("ledgerBurn").textContent = ((feeBase * txnCount) / 1e6).toFixed(6) + " XRP";
+      if (msg.type === "ledgerClosed" || (msg.ledger_index && msg.txn_count !== undefined)) {
+        if (msg.ledger_index) document.getElementById("ledgerIdx").textContent = Number(msg.ledger_index).toLocaleString();
+        const burned = (((msg.fee_base || 10) * (msg.txn_count || 0)) / 1e6).toFixed(6);
+        document.getElementById("ledgerBurn").textContent = burned + " XRP";
       }
-      if (msg.transaction && msg.transaction.TransactionType === "Payment") {
+      if (msg.transaction?.TransactionType === "Payment") {
         const now = Date.now();
-        if (now - lastTxTime < 300) return;
+        if (now - lastTxTime < 350) return;
         lastTxTime = now;
         const tx = msg.transaction;
-        let amount = tx.Amount;
-        if (typeof amount === "object") return;
-        amount = (parseInt(amount) / 1e6).toFixed(2);
-        const from = (tx.Account || "").slice(0, 6) + "…";
-        const to = (tx.Destination || "").slice(0, 6) + "…";
-        const time = new Date().toLocaleTimeString();
+        if (typeof tx.Amount === "object") return;
+        const amount = (parseInt(tx.Amount) / 1e6).toFixed(2);
         const row = document.createElement("div");
         row.className = "flex justify-between gap-1 text-cyan-300";
-        row.innerHTML = `<span>${amount} XRP</span><span class="text-white/50">${from}→${to}</span><span class="text-white/30 text-[10px]">${time}</span>`;
+        row.innerHTML = `<span>${amount} XRP</span><span class="text-white/50">${(tx.Account||"").slice(0,6)}…→${(tx.Destination||"").slice(0,6)}…</span><span class="text-white/30 text-[9px]">${new Date().toLocaleTimeString()}</span>`;
         txFeed.prepend(row);
-        while (txFeed.children.length > maxTx) txFeed.removeChild(txFeed.lastChild);
+        while (txFeed.children.length > 12) txFeed.removeChild(txFeed.lastChild);
       }
     } catch (e) {}
   };
-  ws.onerror = () => { txFeed.innerHTML = '<div class="text-red-400">XRPL connection error</div>'; };
-  ws.onclose = () => {
-    txFeed.innerHTML = '<div class="text-yellow-400">Disconnected – reconnecting...</div>';
-    setTimeout(connectXRPL, 4000);
-  };
+  ws.onclose = () => setTimeout(connectXRPL, 4000);
 }
 connectXRPL();
 
-// === Globe ===
+// ===== Globe =====
 const globe = Globe()(document.getElementById("globeViz"))
   .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-night.jpg")
   .backgroundColor("rgba(0,0,0,0)")
   .atmosphereColor("#00f0ff")
   .atmosphereAltitude(0.15);
 globe.controls().autoRotate = true;
-globe.controls().autoRotateSpeed = 0.7;
+globe.controls().autoRotateSpeed = 0.65;
 </script>
 </body>
 </html>
