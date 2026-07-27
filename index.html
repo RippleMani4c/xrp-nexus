@@ -91,10 +91,30 @@
     </div>
     <div class="relative" style="height:380px;">
       <div id="globeViz" style="width:100%;height:100%;border-radius:12px;overflow:hidden;"></div>
-      <div class="absolute top-3 left-3 right-3 md:right-auto md:w-80 glass rounded-lg p-3 border border-cyan-500/30" style="max-height:220px; z-index:20;">
-        <p class="orbitron text-xs text-cyan-400 mb-2 tracking-wider">LIVE XRPL PAYMENTS</p>
-        <div id="txFeed" class="space-y-1 font-mono">
-          <div class="text-white/40">Connecting to XRPL...</div>
+      <div class="absolute top-3 left-3 right-3 md:w-[34rem] flex gap-3" style="z-index:20; max-height:230px;">
+        <div class="glass rounded-lg p-3 border border-cyan-500/30 flex-1 overflow-hidden">
+          <p class="orbitron text-xs text-cyan-400 mb-2 tracking-wider">LIVE XRPL PAYMENTS</p>
+          <div id="txFeed" class="space-y-1 font-mono text-[11px]" style="max-height:180px; overflow-y:auto;">
+            <div class="text-white/40">Connecting to XRPL...</div>
+          </div>
+        </div>
+        <div class="glass rounded-lg p-3 border border-cyan-500/30 w-44 flex-shrink-0">
+          <p class="orbitron text-xs text-cyan-400 mb-2 tracking-wider">LEDGER BURN</p>
+          <div class="space-y-2 text-sm">
+            <div>
+              <p class="text-white/40 text-[10px] uppercase">Latest Ledger</p>
+              <p id="ledgerIdx" class="orbitron text-lg font-bold text-cyan-300">--</p>
+            </div>
+            <div>
+              <p class="text-white/40 text-[10px] uppercase">Burned this ledger</p>
+              <p id="ledgerBurn" class="orbitron text-base font-bold text-orange-400">--</p>
+            </div>
+            <div>
+              <p class="text-white/40 text-[10px] uppercase">Total Burned (est.)</p>
+              <p id="totalBurn" class="orbitron text-base font-bold">14.3M+ XRP</p>
+            </div>
+            <p class="text-[10px] text-white/30 mt-1">via XRPL public</p>
+          </div>
         </div>
       </div>
     </div>
@@ -173,22 +193,34 @@ let lastTxTime = 0;
 function connectXRPL() {
   const ws = new WebSocket("wss://xrplcluster.com");
   ws.onopen = () => {
-    txFeed.innerHTML = '<div class="text-green-400">XRPL connected – streaming payments...</div>';
-    ws.send(JSON.stringify({ id: 1, command: "subscribe", streams: ["transactions"] }));
+    txFeed.innerHTML = '<div class="text-green-400">XRPL connected – streaming...</div>';
+    ws.send(JSON.stringify({ id: 1, command: "subscribe", streams: ["transactions", "ledger"] }));
   };
   ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
-      if (!msg.transaction || msg.transaction.TransactionType !== "Payment") return;
 
+      // Ledger close → update burn panel
+      if (msg.type === "ledgerClosed" || msg.ledger_index) {
+        const idx = msg.ledger_index || msg.ledgerIndex;
+        if (idx) document.getElementById("ledgerIdx").textContent = idx.toLocaleString();
+        // fee burned approx from txn_count * base fee (rough)
+        if (msg.txn_count) {
+          const burned = (msg.txn_count * 0.000012).toFixed(6); // approximate
+          document.getElementById("ledgerBurn").textContent = burned + " XRP";
+        }
+      }
+
+      // Payment transactions
+      if (!msg.transaction || msg.transaction.TransactionType !== "Payment") return;
       const now = Date.now();
-      if (now - lastTxTime < 300) return; // throttle display
+      if (now - lastTxTime < 300) return;
       lastTxTime = now;
 
       const tx = msg.transaction;
       let amount = tx.Amount;
-      if (typeof amount === "object") return; // skip issued currencies for simplicity
-      amount = (parseInt(amount) / 1e6).toFixed(2); // drops to XRP
+      if (typeof amount === "object") return;
+      amount = (parseInt(amount) / 1e6).toFixed(2);
 
       const from = (tx.Account || "").slice(0, 6) + "…";
       const to = (tx.Destination || "").slice(0, 6) + "…";
@@ -198,15 +230,10 @@ function connectXRPL() {
       row.className = "flex justify-between gap-1 text-cyan-300";
       row.innerHTML = `<span>${amount} XRP</span><span class="text-white/50">${from}→${to}</span><span class="text-white/30 text-[10px]">${time}</span>`;
       txFeed.prepend(row);
-
-      while (txFeed.children.length > maxTx) {
-        txFeed.removeChild(txFeed.lastChild);
-      }
+      while (txFeed.children.length > maxTx) txFeed.removeChild(txFeed.lastChild);
     } catch(e) {}
   };
-  ws.onerror = () => {
-    txFeed.innerHTML = '<div class="text-red-400">XRPL connection error</div>';
-  };
+  ws.onerror = () => { txFeed.innerHTML = '<div class="text-red-400">XRPL connection error</div>'; };
   ws.onclose = () => {
     txFeed.innerHTML = '<div class="text-yellow-400">Disconnected – reconnecting...</div>';
     setTimeout(connectXRPL, 4000);
