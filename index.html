@@ -22,9 +22,6 @@
   .pulse { animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
   .glow-border { border: 1px solid transparent; background: linear-gradient(var(--bg-dark),var(--bg-dark)) padding-box, linear-gradient(135deg,var(--neon-cyan),var(--neon-purple)) border-box; }
-  #tradeFeed { max-height: 140px; overflow-y: auto; font-size: 12px; }
-  #tradeFeed::-webkit-scrollbar { width: 4px; }
-  #tradeFeed::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.3); border-radius: 2px; }
 </style>
 </head>
 <body class="grid-bg">
@@ -34,7 +31,7 @@
       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center orbitron font-black text-black text-lg">X</div>
       <div>
         <h1 class="orbitron text-xl font-bold neon-text tracking-wider">XRP NEXUS</h1>
-        <p class="text-xs text-cyan-400/70">@RippleMani4c</p>
+        <p class="text-xs text-cyan-400/70">@RippleMani4c • CoinGecko</p>
       </div>
     </div>
     <div class="flex items-center gap-2 text-xs">
@@ -45,7 +42,7 @@
 </header>
 
 <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-  <!-- Price -->
+  <!-- Price Hero -->
   <section class="glass rounded-2xl p-6 glow-border">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
@@ -64,7 +61,7 @@
     </div>
   </section>
 
-  <!-- Live metrics -->
+  <!-- Metrics -->
   <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
     <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">24h High</p><p id="high24" class="orbitron text-xl font-bold">--</p></div>
     <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">24h Low</p><p id="low24" class="orbitron text-xl font-bold">--</p></div>
@@ -86,68 +83,63 @@
     </script>
   </section>
 
-  <!-- Spinning Globe + Live Trade Feed -->
-  <section class="glass rounded-2xl p-4 glow-border relative">
+  <!-- Spinning Globe -->
+  <section class="glass rounded-2xl p-4 glow-border">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="orbitron text-sm text-cyan-400 tracking-wider">EARTH • LIVE XRP TRADES</h3>
-      <span class="text-xs text-white/40">Trades stream every second</span>
+      <h3 class="orbitron text-sm text-cyan-400 tracking-wider">EARTH VIEW</h3>
+      <span class="text-xs text-white/40">Data via CoinGecko • 15s refresh</span>
     </div>
-    <div class="relative" style="height:380px;">
-      <div id="globeViz" style="width:100%;height:100%;border-radius:12px;overflow:hidden;"></div>
-      <!-- Overlay trade feed on top of globe -->
-      <div class="absolute top-3 left-3 right-3 md:right-auto md:w-72 glass rounded-lg p-3 border border-cyan-500/30" style="max-height:200px; z-index:20;">
-        <p class="orbitron text-xs text-cyan-400 mb-2 tracking-wider">LIVE TRADES (Binance)</p>
-        <div id="tradeFeed" class="space-y-1 font-mono"><div class="text-white/40">Connecting to stream...</div></div>
-      </div>
-    </div>
+    <div id="globeViz" style="width:100%;height:360px;border-radius:12px;overflow:hidden;"></div>
   </section>
 </main>
 
 <footer class="mt-8 border-t border-cyan-500/30 bg-black/50">
   <div class="px-4 py-2 flex items-center gap-3 border-b border-cyan-500/20">
     <span class="orbitron text-xs text-cyan-400 tracking-widest">LIVE NEWS</span>
-    <span class="text-xs text-white/40">• CoinDesk + Cointelegraph • 60s</span>
+    <span class="text-xs text-white/40">• CoinDesk + Cointelegraph</span>
     <span class="ml-auto text-xs text-purple-400">@RippleMani4c</span>
   </div>
   <div class="overflow-hidden py-3">
     <div class="ticker whitespace-nowrap" id="news-ticker">
-      <span class="inline-block mx-8 text-sm text-white/50">Loading...</span>
+      <span class="inline-block mx-8 text-sm text-white/50">Loading news...</span>
     </div>
   </div>
-  <div class="text-center py-2 text-xs text-white/30">XRP Nexus © 2026 • Real-time only • Not financial advice</div>
+  <div class="text-center py-2 text-xs text-white/30">XRP Nexus © 2026 • CoinGecko powered • Not financial advice</div>
 </footer>
 
 <script>
-// === 60s metrics update ===
 async function updateAll() {
+  // CoinGecko full coin data
   try {
-    const r = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=XRPUSDT");
-    const d = await r.json();
-    const price = parseFloat(d.lastPrice);
-    const change = parseFloat(d.priceChangePercent);
+    const r = await fetch("https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false");
+    const data = await r.json();
+    const md = data.market_data;
+
+    const price = md.current_price.usd;
+    const change = md.price_change_percentage_24h;
     document.getElementById("price").textContent = "$" + price.toFixed(4);
     const ch = document.getElementById("change");
     ch.textContent = (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
     ch.className = "text-2xl font-bold " + (change >= 0 ? "price-up" : "price-down");
-    document.getElementById("vol").textContent = "$" + (parseFloat(d.quoteVolume)/1e6).toFixed(2) + "M";
-    document.getElementById("high24").textContent = "$" + parseFloat(d.highPrice).toFixed(4);
-    document.getElementById("low24").textContent = "$" + parseFloat(d.lowPrice).toFixed(4);
-    document.getElementById("updated").textContent = new Date().toLocaleTimeString();
-  } catch(e) {}
 
-  try {
-    const r = await fetch("https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false");
-    const data = await r.json();
-    document.getElementById("mcap").textContent = "$" + (data.market_data.market_cap.usd/1e9).toFixed(2) + "B";
+    document.getElementById("mcap").textContent = "$" + (md.market_cap.usd / 1e9).toFixed(2) + "B";
+    document.getElementById("vol").textContent = "$" + (md.total_volume.usd / 1e6).toFixed(2) + "M";
     document.getElementById("rank").textContent = "#" + data.market_cap_rank;
-    const ath = data.market_data.ath.usd;
-    const cur = data.market_data.current_price.usd;
-    const dist = ((cur - ath)/ath * 100).toFixed(1);
+    document.getElementById("high24").textContent = "$" + md.high_24h.usd.toFixed(4);
+    document.getElementById("low24").textContent = "$" + md.low_24h.usd.toFixed(4);
+
+    const ath = md.ath.usd;
+    const dist = ((price - ath) / ath * 100).toFixed(1);
     const athEl = document.getElementById("athDist");
     athEl.textContent = dist + "%";
     athEl.className = "orbitron text-xl font-bold " + (dist >= 0 ? "price-up" : "price-down");
-  } catch(e) {}
 
+    document.getElementById("updated").textContent = new Date().toLocaleTimeString();
+  } catch(e) {
+    console.log("CoinGecko error", e);
+  }
+
+  // Fear & Greed
   try {
     const r = await fetch("https://api.alternative.me/fng/?limit=1");
     const data = await r.json();
@@ -155,6 +147,7 @@ async function updateAll() {
     document.getElementById("fngLabel").textContent = data.data[0].value_classification;
   } catch(e) {}
 
+  // News
   try {
     const sources = [
       {name:"CoinDesk", url:"https://www.coindesk.com/arc/outboundfeeds/rss/"},
@@ -174,49 +167,11 @@ async function updateAll() {
     }
   } catch(e) {}
 }
+
 updateAll();
-setInterval(updateAll, 60000);
+setInterval(updateAll, 15000); // every 15 seconds
 
-// === Live trade feed (every trade ≈ sub-second, display throttled feel) ===
-const tradeFeed = document.getElementById("tradeFeed");
-const maxTrades = 12;
-let lastTradeTime = 0;
-
-const tradeWs = new WebSocket("wss://stream.binance.com:9443/ws/xrpusdt@trade");
-tradeWs.onopen = () => {
-  tradeFeed.innerHTML = '<div class="text-green-400">Stream live – waiting for trades...</div>';
-};
-tradeWs.onmessage = (event) => {
-  const t = JSON.parse(event.data);
-  const now = Date.now();
-  if (now - lastTradeTime < 150) return;
-  lastTradeTime = now;
-
-  const price = parseFloat(t.p).toFixed(4);
-  const qty = parseFloat(t.q).toFixed(1);
-  const isBuy = !t.m;
-  const side = isBuy ? "BUY" : "SELL";
-  const color = isBuy ? "text-green-400" : "text-red-400";
-  const time = new Date(t.T).toLocaleTimeString();
-
-  const row = document.createElement("div");
-  row.className = "flex justify-between gap-2 " + color;
-  row.innerHTML = `<span class="font-bold">${side}</span><span>$${price}</span><span>${qty}</span><span class="text-white/40 text-[10px]">${time}</span>`;
-  tradeFeed.prepend(row);
-
-  while (tradeFeed.children.length > maxTrades) {
-    tradeFeed.removeChild(tradeFeed.lastChild);
-  }
-};
-tradeWs.onerror = () => {
-  tradeFeed.innerHTML = '<div class="text-red-400">WS error – check network / adblock</div>';
-};
-tradeWs.onclose = () => {
-  tradeFeed.innerHTML = '<div class="text-yellow-400">Disconnected – reconnecting...</div>';
-  setTimeout(() => location.reload(), 4000);
-};
-
-// === Spinning globe (no nodes) ===
+// Spinning globe (clean)
 const globe = Globe()(document.getElementById("globeViz"))
   .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
   .backgroundColor("rgba(0,0,0,0)")
