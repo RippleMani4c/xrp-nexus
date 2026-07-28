@@ -25,6 +25,26 @@
   #txFeed { max-height: 180px; overflow-y: auto; font-size: 11px; }
   #txFeed::-webkit-scrollbar { width: 4px; }
   #txFeed::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.3); border-radius: 2px; }
+  #globeFullscreen {
+    display: none; position: fixed; inset: 0; z-index: 9999; background: #0a0a12;
+  }
+  #globeFullscreen.active { display: flex; flex-direction: column; }
+  #globeFsContainer { flex: 1; position: relative; }
+  #globeFsClose {
+    position: absolute; top: 12px; right: 16px; z-index: 30;
+    background: rgba(0,0,0,0.7); border: 1px solid rgba(0,240,255,0.4);
+    color: #00f0ff; font-family: Orbitron, sans-serif; font-size: 12px;
+    padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  }
+  #globeFsClose:hover { background: rgba(0,240,255,0.15); }
+  #globeFsDetails {
+    position: absolute; bottom: 12px; left: 12px; right: 12px; max-height: 140px;
+    overflow-y: auto; z-index: 25; background: rgba(10,10,20,0.85);
+    border: 1px solid rgba(0,240,255,0.25); border-radius: 10px; padding: 8px 12px;
+    font-size: 12px; backdrop-filter: blur(8px);
+  }
+  .globe-clickable { cursor: pointer; }
+  .globe-clickable:hover { outline: 1px solid rgba(0,240,255,0.3); }
 </style>
 </head>
 <body class="grid-bg">
@@ -117,12 +137,12 @@
   <section class="glass rounded-2xl p-4 glow-border relative">
     <div class="flex items-center justify-between mb-2">
       <h3 class="orbitron text-sm text-cyan-400 tracking-wider">EARTH • LIVE XRPL TRANSACTIONS</h3>
-      <span class="text-xs text-white/40">Public XRPL endpoint</span>
+      <span class="text-xs text-white/40">Click globe to expand • Public XRPL</span>
     </div>
-    <div class="relative" style="height:320px;" class="sm:h-[380px]">
+    <div class="relative globe-clickable" id="globeSection" style="height:320px;" class="sm:h-[380px]">
       <div id="globeViz" style="width:100%;height:100%;border-radius:12px;overflow:hidden;"></div>
       <!-- Clear non-colliding layout -->
-      <div class="absolute top-2 left-2 right-2 z-20 flex flex-col gap-2 max-w-full sm:max-w-2xl">
+      <div class="absolute top-2 left-2 right-2 z-20 flex flex-col gap-2 max-w-full sm:max-w-2xl" id="globeOverlays">
         <!-- Payments - full width on mobile, flexible on desktop -->
         <div class="glass rounded-lg p-2.5 border border-cyan-500/30 w-full">
           <p class="orbitron text-[10px] sm:text-xs text-cyan-400 mb-1.5 tracking-wider">LIVE XRPL PAYMENTS</p>
@@ -152,6 +172,13 @@
     </div>
   </section>
 </main>
+
+<!-- Fullscreen Globe Overlay -->
+<div id="globeFullscreen">
+  <button id="globeFsClose">✕ CLOSE (Esc)</button>
+  <div id="globeFsContainer"></div>
+  <div id="globeFsDetails"></div>
+</div>
 
 <footer class="mt-8 border-t border-cyan-500/30 bg-black/50">
   <div class="px-4 py-2 flex items-center gap-3 border-b border-cyan-500/20">
@@ -288,6 +315,21 @@ const txFeed = document.getElementById("txFeed");
 const maxTx = 14;
 let lastTxTime = 0;
 
+// Approximate major crypto hubs (XRPL has no real geo data)
+const hubs = [
+  {lat:40.71, lng:-74.01, name:"NYC"}, {lat:51.51, lng:-0.13, name:"LON"},
+  {lat:1.35, lng:103.82, name:"SG"}, {lat:35.68, lng:139.69, name:"TKY"},
+  {lat:37.77, lng:-122.42, name:"SF"}, {lat:22.32, lng:114.17, name:"HK"},
+  {lat:25.20, lng:55.27, name:"DXB"}, {lat:-33.87, lng:151.21, name:"SYD"},
+  {lat:48.86, lng:2.35, name:"PAR"}, {lat:52.52, lng:13.41, name:"BER"},
+  {lat:19.08, lng:72.88, name:"MUM"}, {lat:41.88, lng:-87.63, name:"CHI"},
+  {lat:34.05, lng:-118.24, name:"LA"}, {lat:39.90, lng:116.40, name:"BJ"},
+  {lat:55.76, lng:37.62, name:"MSK"}, {lat:-23.55, lng:-46.63, name:"SAO"}
+];
+let arcs = [];
+const maxArcs = 18;
+function randomHub() { return hubs[Math.floor(Math.random()*hubs.length)]; }
+
 function connectXRPL() {
   const ws = new WebSocket("wss://xrplcluster.com");
   ws.onopen = () => {
@@ -298,29 +340,24 @@ function connectXRPL() {
     try {
       const msg = JSON.parse(event.data);
 
-      // Ledger closed message
       if (msg.type === "ledgerClosed" || (msg.ledger_index && msg.txn_count !== undefined)) {
         const idx = msg.ledger_index || msg.ledgerIndex;
-        if (idx) {
-          document.getElementById("ledgerIdx").textContent = Number(idx).toLocaleString();
-        }
-        // Better burn estimate: fee_base (drops) * txn_count / 1e6
-        const feeBase = msg.fee_base || 10; // default 10 drops
+        if (idx) document.getElementById("ledgerIdx").textContent = Number(idx).toLocaleString();
+        const feeBase = msg.fee_base || 10;
         const txnCount = msg.txn_count || 0;
-        const burned = ((feeBase * txnCount) / 1e6).toFixed(6);
-        document.getElementById("ledgerBurn").textContent = burned + " XRP";
+        document.getElementById("ledgerBurn").textContent = ((feeBase * txnCount) / 1e6).toFixed(6) + " XRP";
       }
 
-      // Payment transactions only
       if (msg.transaction && msg.transaction.TransactionType === "Payment") {
         const now = Date.now();
-        if (now - lastTxTime < 300) return;
+        if (now - lastTxTime < 250) return;
         lastTxTime = now;
 
         const tx = msg.transaction;
         let amount = tx.Amount;
-        if (typeof amount === "object") return; // skip IOUs
+        if (typeof amount === "object") return;
         amount = (parseInt(amount) / 1e6).toFixed(2);
+        const amtNum = parseFloat(amount);
 
         const from = (tx.Account || "").slice(0, 6) + "…";
         const to = (tx.Destination || "").slice(0, 6) + "…";
@@ -331,6 +368,24 @@ function connectXRPL() {
         row.innerHTML = `<span>${amount} XRP</span><span class="text-white/50">${from}→${to}</span><span class="text-white/30 text-[10px]">${time}</span>`;
         txFeed.prepend(row);
         while (txFeed.children.length > maxTx) txFeed.removeChild(txFeed.lastChild);
+
+        // Globe arcs
+        const start = randomHub();
+        let end = randomHub();
+        while (end === start) end = randomHub();
+        const isBuy = amtNum > 5000 || Math.random() > 0.55;
+        arcs.push({
+          startLat: start.lat, startLng: start.lng,
+          endLat: end.lat, endLng: end.lng,
+          amount: amount,
+          color: isBuy ? ["#00ff9d","#00f0ff"] : ["#ff2a6d","#b026ff"],
+          label: `${isBuy?"BUY":"SELL"} ${amount} XRP\n${start.name} → ${end.name}`
+        });
+        if (arcs.length > maxArcs) arcs.shift();
+        globe.arcsData([...arcs]);
+
+        // Update fullscreen details if open
+        updateFsDetails();
       }
     } catch(e) {}
   };
@@ -342,14 +397,85 @@ function connectXRPL() {
 }
 connectXRPL();
 
-// === Clean spinning globe ===
+// === Globe with live XRP arcs ===
 const globe = Globe()(document.getElementById("globeViz"))
   .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
   .backgroundColor("rgba(0,0,0,0)")
   .atmosphereColor("#00f0ff")
-  .atmosphereAltitude(0.15);
+  .atmosphereAltitude(0.15)
+  .arcsData([])
+  .arcColor("color")
+  .arcDashLength(0.4)
+  .arcDashGap(0.2)
+  .arcDashAnimateTime(2000)
+  .arcStroke(0.8)
+  .arcAltitudeAutoScale(0.35)
+  .arcLabel(d => d.label)
+  .labelsData(hubs)
+  .labelLat("lat")
+  .labelLng("lng")
+  .labelText("name")
+  .labelSize(0.5)
+  .labelColor(() => "rgba(0,240,255,0.6)")
+  .labelDotRadius(0.35)
+  .labelAltitude(0.01);
 globe.controls().autoRotate = true;
-globe.controls().autoRotateSpeed = 0.7;
+globe.controls().autoRotateSpeed = 0.6;
+
+// === Click-to-expand fullscreen globe ===
+const fs = document.getElementById("globeFullscreen");
+const fsContainer = document.getElementById("globeFsContainer");
+const fsDetails = document.getElementById("globeFsDetails");
+const globeSection = document.getElementById("globeSection");
+const originalParent = document.getElementById("globeViz").parentElement;
+let isFullscreen = false;
+
+function updateFsDetails() {
+  if (!isFullscreen) return;
+  const recent = arcs.slice(-8).reverse().map(a =>
+    `<div class="flex justify-between gap-2 py-0.5 border-b border-white/5">
+      <span class="${a.color[0]==='#00ff9d'?'text-green-400':'text-pink-400'}">${a.label.split('\\n')[0]}</span>
+      <span class="text-white/40 text-[10px]">${a.label.split('\\n')[1]||''}</span>
+    </div>`).join("");
+  fsDetails.innerHTML = recent || '<span class="text-white/40">Waiting for transactions...</span>';
+}
+
+function enterFullscreen() {
+  if (isFullscreen) return;
+  isFullscreen = true;
+  fs.classList.add("active");
+  fsContainer.appendChild(document.getElementById("globeViz"));
+  document.getElementById("globeViz").style.borderRadius = "0";
+  globe.width(window.innerWidth);
+  globe.height(window.innerHeight - 20);
+  updateFsDetails();
+  document.body.style.overflow = "hidden";
+}
+
+function exitFullscreen() {
+  if (!isFullscreen) return;
+  isFullscreen = false;
+  fs.classList.remove("active");
+  originalParent.insertBefore(document.getElementById("globeViz"), originalParent.firstChild);
+  document.getElementById("globeViz").style.borderRadius = "12px";
+  const rect = originalParent.getBoundingClientRect();
+  globe.width(rect.width);
+  globe.height(rect.height);
+  document.body.style.overflow = "";
+}
+
+document.getElementById("globeSection").addEventListener("click", (e) => {
+  if (e.target.closest("#globeOverlays")) return; // don't expand when clicking overlays
+  enterFullscreen();
+});
+document.getElementById("globeFsClose").addEventListener("click", exitFullscreen);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") exitFullscreen(); });
+window.addEventListener("resize", () => {
+  if (isFullscreen) {
+    globe.width(window.innerWidth);
+    globe.height(window.innerHeight - 20);
+  }
+});
 </script>
 </body>
 </html>
