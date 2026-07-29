@@ -90,6 +90,20 @@
     <div class="glass rounded-xl p-4 text-center"><p class="text-cyan-400/60 uppercase text-xs mb-1">Fear & Greed</p><p id="fng" class="orbitron text-xl font-bold">--</p><p id="fngLabel" class="text-xs text-white/50 mt-0.5">--</p></div>
   </section>
 
+  <!-- Price Alerts -->
+  <section class="glass rounded-2xl p-4 sm:p-5 glow-border">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="orbitron text-sm text-cyan-400 tracking-wider">PRICE ALERTS</h3>
+      <span id="alertStatus" class="text-[10px] text-white/40">off</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <label class="text-xs text-cyan-400/70">Threshold %</label>
+      <input id="alertThreshold" type="number" min="1" max="50" value="5" class="w-16 bg-black/40 border border-cyan-500/30 rounded px-2 py-1 text-sm orbitron text-cyan-300 focus:outline-none focus:border-cyan-400">
+      <button id="alertToggle" class="orbitron text-xs px-4 py-2 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 transition">ENABLE ALERTS</button>
+    </div>
+    <p class="mt-2 text-[10px] text-white/40">Browser notifications on phone/desktop for ±threshold moves. Keep tab open or add to home screen.</p>
+  </section>
+
   <!-- Institutional & ETF Tracker -->
   <section class="glass rounded-2xl p-4 sm:p-5 glow-border">
     <div class="flex items-center justify-between mb-3">
@@ -196,6 +210,10 @@
 
 <script>
 // === CoinGecko metrics (every 15s) ===
+let prevPrice = null;
+let alertsOn = localStorage.getItem("xrpAlerts") === "1";
+let lastAlertTs = 0;
+
 async function updateAll() {
   try {
     const r = await fetch("https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false");
@@ -218,6 +236,21 @@ async function updateAll() {
     athEl.textContent = dist + "%";
     athEl.className = "orbitron text-xl font-bold " + (dist >= 0 ? "price-up" : "price-down");
     document.getElementById("updated").textContent = new Date().toISOString().substr(11,8) + " UTC";
+
+    // Price alert check
+    if (alertsOn && prevPrice && Notification.permission === "granted") {
+      const thresh = (parseFloat(document.getElementById("alertThreshold").value) || 5) / 100;
+      const pct = Math.abs((price - prevPrice) / prevPrice);
+      if (pct >= thresh && Date.now() - lastAlertTs > 60000) {
+        const dir = price > prevPrice ? "▲ UP" : "▼ DOWN";
+        new Notification("XRP Alert " + dir, {
+          body: `$${prevPrice.toFixed(4)} → $${price.toFixed(4)} (${(pct*100).toFixed(2)}%)`,
+          icon: "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png"
+        });
+        lastAlertTs = Date.now();
+      }
+    }
+    prevPrice = price;
   } catch(e) {}
 
   try {
@@ -309,6 +342,32 @@ async function updateAll() {
 }
 updateAll();
 setInterval(updateAll, 15000);
+
+// === Price Alerts (browser push, works on phone) ===
+const alertBtn = document.getElementById("alertToggle");
+const alertStatus = document.getElementById("alertStatus");
+function syncAlertUI() {
+  alertBtn.textContent = alertsOn ? "DISABLE ALERTS" : "ENABLE ALERTS";
+  alertStatus.textContent = alertsOn ? "ON • ±" + (document.getElementById("alertThreshold").value || 5) + "%" : "off";
+  alertStatus.className = "text-[10px] " + (alertsOn ? "text-green-400" : "text-white/40");
+}
+syncAlertUI();
+alertBtn.addEventListener("click", async () => {
+  if (!alertsOn) {
+    if (!("Notification" in window)) { alert("Notifications not supported"); return; }
+    let perm = Notification.permission;
+    if (perm !== "granted") perm = await Notification.requestPermission();
+    if (perm !== "granted") { alert("Permission denied"); return; }
+    alertsOn = true;
+    localStorage.setItem("xrpAlerts", "1");
+    new Notification("XRP Alerts ON", { body: "You will get notified on sudden moves ≥ threshold." });
+  } else {
+    alertsOn = false;
+    localStorage.setItem("xrpAlerts", "0");
+  }
+  syncAlertUI();
+});
+document.getElementById("alertThreshold").addEventListener("change", syncAlertUI);
 
 // === XRPL public WebSocket for live transactions ===
 const txFeed = document.getElementById("txFeed");
