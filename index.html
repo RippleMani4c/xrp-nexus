@@ -17,7 +17,8 @@
   .price-up { color: #00ff9d; text-shadow: 0 0 10px #00ff9d; }
   .price-down { color: #ff2a6d; text-shadow: 0 0 10px #ff2a6d; }
   .grid-bg { background-image: linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px); background-size: 40px 40px; }
-  .ticker { display: flex; animation: scroll 45s linear infinite; }
+  .ticker { display: flex; width: max-content; animation: scroll 45s linear infinite; will-change: transform; }
+  .ticker span { flex-shrink: 0; }
   @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   .pulse { animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
